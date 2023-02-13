@@ -1,5 +1,7 @@
 # Express.js-Crash-Course
 
+**Tutorial Link:** https://www.youtube.com/watch?v=L72fhGm1tfE&t=3354s
+
 [why use express](#why-use-express)
 
 [basic server syntax](#basic-server-syntax)
@@ -22,6 +24,11 @@
 
 [Update a Member](#update-a-member)
 
+[Delete a Member](#delete-a-member)
+
+[Rendering Templates using template engine](#rendering-templates-using-template-engine)
+
+[Forms](#forms)
 
 https://www.youtube.com/watch?v=L72fhGm1tfE&t=3354s
 
@@ -266,10 +273,203 @@ router.post('/', (req, res) => {
 
 ## Update a Member
 
+```js
+// Update a member
+router.put('/:id', (req, res) => {
+    const found = members.some(member=>member.id===parseInt(req.params.id));
 
-<!-- time: 50:00 -->
+    if (found) {
+        const updatedMember = req.body;
+        members.forEach(member=>{
+            if (member.id===parseInt(req.params.id)) {
+              member.name = updatedMember.name ? updatedMember.name : member.name;
+              member.email = updatedMember.email ? updatedMember.email: member.email
 
-https://www.youtube.com/watch?v=L72fhGm1tfE&t=3354s
+              res.json({
+                msg: 'Member updated', member
+              })
+            }
+        })
+    } else {
+        res.status(400).json(
+            {
+                msg: `No member with id of ${req.params.id}`
+            }
+        )
+    }  
+})
+```
+
+### Postman API Call
+
+![](./image_1.png)
+
+
+## Delete a Member
+
+```js
+router.delete('/:id', (req, res) => {
+    const found = members.some(member=>member.id===parseInt(req.params.id));
+    if (found) {
+        res.json({
+        msg: 'Member deleted', 
+        member: members.filter(member=>member.  id!==parseInt(req.params.id))
+        })
+    }
+    else {
+        res.status(400).json(
+        {
+            msg: `No member with id of ${req.params.id}`
+        }
+    )
+}  
+});
+```
+
+### Postman API Call
+
+![](./image_2.png)
+
+
+## Rendering Templates using template engine
+
+Install express handlebars
+
+```bash
+npm i express-handlebars
+```
+
+```js
+const exphbs = require('express-handlebars');
+// Handlebars Middlware
+app.engine('handlebars', {
+    defaultLayout: 'main'
+});
+app.set('view engine', 'handlebars');
+app.set('views', './views');
+```
+
+- Create a `views` folder.
+- Create a `layouts` folder inside our `views` folder.
+
+### Output the views
+
+**views\layouts\main.handlebars**
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <title>Members App</title>
+</head>
+<body>
+    <div class="container mt-4">
+        {{{body}}}
+    </div>
+</body>
+</html>
+```
+
+### Create view for index page
+
+**views\index.handlebars**
+
+```html
+<h1>Members</h1>
+```
+
+### Create a route for index view
+
+**index.js**
+```js
+// Homepage route
+app.get('/', (req, res)=>res.render('index'))
+```
+
+### Render the contents in template
+
+**views\index.handlebars**
+
+```html
+<h1 class="text-center mb-3">{{title}}</h1>
+<h4>Members</h4>
+<ul class="list-group">
+    <!-- loop though each member -->
+    {{#each members}}
+        <li class="list-group-item">
+            {{this.name}}: {{this.email}}
+        </li>
+    {{/each}}
+</ul>
+```
+
+- Update the route
+
+**index.js**
+
+```js
+// Homepage route
+app.get('/', (req, res)=>res.render('index', {
+    title: 'Member App',
+    members
+}));
+```
+
+## Forms
+
+### Create a form to add new member
+
+```html
+<h1 class="text-center mb-3">{{title}}</h1>
+<form action="/api/members" method="post" class="mb-4">
+    <div class="form-group">
+        <label for="name">Name</label>
+        <input type="text" name="name" id="" class="form-control">
+    </div>
+    <div class="form-group mt-3">
+        <label for="email">Email</label>
+        <input type="text" name="email" id=""
+        class="form-control"
+        >
+    </div>
+    <input type="submit" value="Add Member" class="btn btn-primary btn-block mt-3">
+</form>
+<h4>Members</h4>
+<ul class="list-group">
+    {{#each members}}
+        <li class="list-group-item">
+            {{this.name}}: {{this.email}}
+        </li>
+    {{/each}}
+</ul>
+```
+
+### Redirect to home page after adding a member
+
+```js
+router.post('/', (req, res) => {
+    const newMamber = {
+        id: uuid.v4(),
+        name: req.body.name,
+        email: req.body.email,
+        status: 'active'
+    }
+    if (!newMamber.name
+        || !newMamber.email) {
+            return res.status(400).json({
+                msg: 'please include a name and email'
+            })
+    } 
+    
+    members.push(newMamber)
+    res.redirect('/')
+})
+```
+
 
 
 
